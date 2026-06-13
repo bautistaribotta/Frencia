@@ -1,0 +1,103 @@
+/* ============================================================
+   Frencia · Icon
+   RN port of the Lucide usage from the web kit (data-lucide="…").
+   Components accept a kebab-case `icon` name; this resolves it to
+   a lucide-react-native component. Stroke 2px, currentColor.
+   Add more icons to REGISTRY as needed.
+   ============================================================ */
+
+import React from 'react';
+import {
+  Activity,
+  Apple,
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  Dumbbell,
+  Eye,
+  EyeOff,
+  Flame,
+  Home,
+  Lock,
+  Mail,
+  Minus,
+  MoreHorizontal,
+  Pause,
+  Play,
+  Plus,
+  Repeat,
+  Settings,
+  Target,
+  Timer,
+  TrendingDown,
+  TrendingUp,
+  User,
+  X,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react-native';
+import { colors } from './tokens/colors';
+
+const REGISTRY: Record<string, LucideIcon> = {
+  activity: Activity,
+  apple: Apple,
+  'arrow-down-right': ArrowDownRight,
+  'arrow-right': ArrowRight,
+  'arrow-up-right': ArrowUpRight,
+  'bar-chart-3': BarChart3,
+  calendar: Calendar,
+  check: Check,
+  'chevron-down': ChevronDown,
+  'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
+  'chevron-up': ChevronUp,
+  clock: Clock,
+  dumbbell: Dumbbell,
+  eye: Eye,
+  'eye-off': EyeOff,
+  flame: Flame,
+  home: Home,
+  lock: Lock,
+  mail: Mail,
+  minus: Minus,
+  'more-horizontal': MoreHorizontal,
+  pause: Pause,
+  play: Play,
+  plus: Plus,
+  repeat: Repeat,
+  settings: Settings,
+  target: Target,
+  timer: Timer,
+  'trending-down': TrendingDown,
+  'trending-up': TrendingUp,
+  user: User,
+  x: X,
+  zap: Zap,
+};
+
+export type IconName = keyof typeof REGISTRY;
+
+export interface IconProps {
+  name: string;
+  size?: number;
+  color?: string;
+  strokeWidth?: number;
+}
+
+/** Renders a Lucide icon by kebab name. Unknown names render nothing. */
+export function Icon({ name, size = 20, color = colors.textPrimary, strokeWidth = 2 }: IconProps) {
+  const Cmp = REGISTRY[name];
+  if (!Cmp) {
+    if (__DEV__) console.warn(`[Frencia] Icon "${name}" not in registry — add it to Icon.tsx`);
+    return null;
+  }
+  return <Cmp size={size} color={color} strokeWidth={strokeWidth} />;
+}

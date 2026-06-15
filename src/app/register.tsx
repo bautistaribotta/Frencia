@@ -1,5 +1,5 @@
-/* Frencia · Login — pantalla de acceso.
-   Campo negro, verde esmeralda, Anton en el hero. "Cada serie cuenta." */
+/* Frencia · Registro — crear cuenta nueva.
+   Espeja el login. "Empezá a registrar cada serie." */
 
 import React, { useState } from 'react';
 import {
@@ -31,22 +31,26 @@ import {
   tracking,
 } from '@/design';
 
-interface LoginScreenProps {
-  onNavigateToRegister?: () => void;
+interface RegisterScreenProps {
+  onNavigateToLogin?: () => void;
 }
 
-export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) {
+export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProps) {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const canSubmit = email.trim().length > 3 && password.length >= 6;
+  const passwordsMatch = password.length >= 6 && password === confirm;
+  const canSubmit =
+    name.trim().length > 1 && email.trim().length > 3 && passwordsMatch;
 
-  function handleLogin() {
+  function handleRegister() {
     if (!canSubmit || loading) return;
     setLoading(true);
-    // TODO: conectar auth real. Placeholder.
+    // TODO: conectar registro real. Placeholder.
     setTimeout(() => setLoading(false), 1200);
   }
 
@@ -85,13 +89,21 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
           {/* Form */}
           <View style={styles.form}>
             <FrenciaText role="title" style={styles.heading}>
-              Entrá a tu cuenta
+              Creá tu cuenta
             </FrenciaText>
             <FrenciaText role="bodySm" color={colors.textSecondary}>
-              Seguí registrando cada serie donde la dejaste.
+              Empezá a registrar cada serie desde hoy.
             </FrenciaText>
 
             <View style={styles.fields}>
+              <Field
+                icon="user"
+                placeholder="Nombre"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+                autoComplete="name"
+              />
               <Field
                 icon="mail"
                 placeholder="Correo electrónico"
@@ -109,7 +121,7 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
                 onChangeText={setPassword}
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
-                autoComplete="password"
+                autoComplete="password-new"
                 trailing={
                   <Pressable
                     hitSlop={10}
@@ -125,13 +137,22 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
                   </Pressable>
                 }
               />
+              <Field
+                icon="lock"
+                placeholder="Repetí la contraseña"
+                value={confirm}
+                onChangeText={setConfirm}
+                secureTextEntry={!showPass}
+                autoCapitalize="none"
+                autoComplete="password-new"
+              />
             </View>
 
-            <Pressable style={styles.forgot} hitSlop={8}>
-              <FrenciaText role="bodySm" color={colors.accentText}>
-                ¿Olvidaste tu contraseña?
+            {confirm.length > 0 && !passwordsMatch ? (
+              <FrenciaText role="bodySm" color={colors.dangerText}>
+                Las contraseñas no coinciden.
               </FrenciaText>
-            </Pressable>
+            ) : null}
 
             <Button
               variant="primary"
@@ -140,16 +161,16 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
               iconRight="arrow-right"
               disabled={!canSubmit}
               loading={loading}
-              onPress={handleLogin}
+              onPress={handleRegister}
             >
-              Entrar
+              Crear cuenta
             </Button>
 
             {/* Divisor */}
             <View style={styles.divider}>
               <View style={styles.line} />
               <FrenciaText role="dataLabel" color={colors.textTertiary}>
-                o continuá con
+                o registrate con
               </FrenciaText>
               <View style={styles.line} />
             </View>
@@ -177,11 +198,11 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
           {/* Footer */}
           <View style={styles.footer}>
             <FrenciaText role="bodySm" color={colors.textSecondary}>
-              ¿No tenés cuenta?{' '}
+              ¿Ya tenés cuenta?{' '}
             </FrenciaText>
-            <Pressable hitSlop={8} onPress={onNavigateToRegister}>
+            <Pressable hitSlop={8} onPress={onNavigateToLogin}>
               <FrenciaText role="bodySm" color={colors.accentText} style={styles.footerLink}>
-                Creá una
+                Iniciá sesión
               </FrenciaText>
             </Pressable>
           </View>
@@ -191,7 +212,7 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
   );
 }
 
-/* ── Campo de texto con icono, focus verde ───────────────────── */
+/* ── Campo de texto con icono, focus de acento ───────────────── */
 interface FieldProps extends TextInputProps {
   icon: string;
   trailing?: React.ReactNode;
@@ -277,7 +298,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     padding: 0,
   },
-  forgot: { alignSelf: 'flex-end', marginTop: -space[2] },
 
   // Divisor
   divider: { flexDirection: 'row', alignItems: 'center', gap: space[4] },

@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { supabase } from '@/lib/supabase';
+
 import AppleLogo from '@/assets/icons/apple.svg';
 import GoogleLogo from '@/assets/icons/google.svg';
 
@@ -42,16 +44,42 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
   const [confirm, setConfirm] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [doneMsg, setDoneMsg] = useState('');
 
   const passwordsMatch = password.length >= 6 && password === confirm;
   const canSubmit =
     name.trim().length > 1 && email.trim().length > 3 && passwordsMatch;
 
-  function handleRegister() {
+  async function handleRegister() {
     if (!canSubmit || loading) return;
     setLoading(true);
-    // TODO: conectar registro real. Placeholder.
-    setTimeout(() => setLoading(false), 1200);
+    setErrorMsg('');
+    setDoneMsg('');
+
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        // El trigger en Supabase guarda este nombre en la tabla profiles.
+        data: { name: name.trim() },
+      },
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setErrorMsg(error.message);
+      return;
+    }
+
+    // Si esta activada la confirmacion por email, todavia no hay sesion.
+    if (!data.session) {
+      setDoneMsg('Revisá tu correo para confirmar la cuenta.');
+      return;
+    }
+
+    setDoneMsg('Cuenta creada.');
   }
 
   return (
@@ -151,6 +179,18 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
             {confirm.length > 0 && !passwordsMatch ? (
               <FrenciaText role="bodySm" color={colors.dangerText}>
                 Las contraseñas no coinciden.
+              </FrenciaText>
+            ) : null}
+
+            {errorMsg ? (
+              <FrenciaText role="bodySm" color={colors.dangerText}>
+                {errorMsg}
+              </FrenciaText>
+            ) : null}
+
+            {doneMsg ? (
+              <FrenciaText role="bodySm" color={colors.accentText}>
+                {doneMsg}
               </FrenciaText>
             ) : null}
 

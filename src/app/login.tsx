@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { supabase } from '@/lib/supabase';
+
 import AppleLogo from '@/assets/icons/apple.svg';
 import GoogleLogo from '@/assets/icons/google.svg';
 
@@ -40,14 +42,32 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [doneMsg, setDoneMsg] = useState('');
 
   const canSubmit = email.trim().length > 3 && password.length >= 6;
 
-  function handleLogin() {
+  async function handleLogin() {
     if (!canSubmit || loading) return;
     setLoading(true);
-    // TODO: conectar auth real. Placeholder.
-    setTimeout(() => setLoading(false), 1200);
+    setErrorMsg('');
+    setDoneMsg('');
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setErrorMsg('No pudimos ingresar. Revisá tu correo y contraseña.');
+      return;
+    }
+
+    setDoneMsg(`Ingresaste. Bienvenido de nuevo${
+      data.user?.user_metadata?.name ? `, ${data.user.user_metadata.name}` : ''
+    }.`);
   }
 
   return (
@@ -144,6 +164,18 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
             >
               Entrar
             </Button>
+
+            {errorMsg ? (
+              <FrenciaText role="bodySm" color={colors.dangerText}>
+                {errorMsg}
+              </FrenciaText>
+            ) : null}
+
+            {doneMsg ? (
+              <FrenciaText role="bodySm" color={colors.accentText}>
+                {doneMsg}
+              </FrenciaText>
+            ) : null}
 
             {/* Divisor */}
             <View style={styles.divider}>

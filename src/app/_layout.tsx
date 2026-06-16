@@ -1,126 +1,103 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useState } from 'react';
-import { useColorScheme } from 'react-native';
+/* Frencia · Layout raiz (Expo Router).
+   Monta los providers globales (gestos, safe-area, tema, sesion, perfil),
+   define el Stack de navegacion y aplica el gate de autenticacion que
+   decide entre el flujo de auth, el setup inicial y la app. */
+
+import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
-import { FrenciaThemeProvider, useFrenciaFonts } from '@/design';
-import { supabase } from '@/lib/supabase';
-// PREVIEW TEMPORAL: arranca directo en el flujo de auth para verlo.
-import HomeScreen from './home';
-import LoginScreen from './login';
-import OnboardingScreen from './onboarding';
-import ProfileScreen from './profile';
-import RegisterScreen from './register';
-import SetupWizardScreen from './setup-wizard';
+import { FrenciaThemeProvider, useColors, useFrenciaFonts, useTheme } from '@/design';
+import { SessionProvider, useSession } from '@/contexts/session';
+import { ProfileProvider, useProfile } from '@/contexts/profile';
 
-const PREVIEW_AUTH = true;
-
-type AuthView = 'login' | 'register' | 'setup' | 'onboarding' | 'home' | 'profile';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   const [fontsLoaded, fontError] = useFrenciaFonts();
-  const [authView, setAuthView] = useState<AuthView>('login');
-  const [userName, setUserName] = useState<string | undefined>(undefined);
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
-  const [avatarSeed, setAvatarSeed] = useState<string | undefined>(undefined);
 
   // No bloquear para siempre si una fuente falla en cargar (web): renderizar igual.
   if (!fontsLoaded && !fontError) return null;
 
-  // Tras el login decide si faltan datos del perfil (primer ingreso) y
-  // manda al onboarding, o si ya esta completo va directo al home.
-  async function resolveAfterLogin(name?: string) {
-    setUserName(name);
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <FrenciaThemeProvider>
+        <SafeAreaProvider>
+          <SessionProvider>
+            <ProfileProvider>
+              <AnimatedSplashOverlay />
+              <RootNavigator />
+            </ProfileProvider>
+          </SessionProvider>
+        </SafeAreaProvider>
+      </FrenciaThemeProvider>
+    </GestureHandlerRootView>
+  );
+}
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+/* Navegacion + gate de auth. Vive dentro de los providers para poder leer
+   sesion y perfil, y dentro del router para usar router/segments. */
+function RootNavigator() {
+  const colors = useColors();
+  const { mode } = useTheme();
 
-    if (!user) {
-      setAuthView('home');
+  useAuthRedirect();
+
+  return (
+    <>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.bgApp },
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(main)" />
+        <Stack.Screen name="setup" />
+        <Stack.Screen
+          name="profile"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="edit-profile"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+      </Stack>
+    </>
+  );
+}
+
+/* Reglas:
+   - Sin sesion: solo el grupo (auth). Si esta afuera, lo mandamos a /login.
+   - Con sesion entrando a la app (grupo auth o raiz): decide entre setup
+     (perfil incompleto, primer ingreso) y home. Una vez adentro no fuerza
+     mas: el usuario puede saltar el setup y navegar libre. */
+function useAuthRedirect() {
+  const { session, initializing } = useSession();
+  const { isIncomplete, loading } = useProfile();
+  const segments = useSegments();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (initializing) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+    const atRoot = pathname === '/';
+
+    if (!session) {
+      if (!inAuthGroup) router.replace('/login');
       return;
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('edad, sexo, altura, peso, avatar_url, avatar_seed')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
-    if (profile?.avatar_seed) setAvatarSeed(profile.avatar_seed);
-
-    const incompleto =
-      !profile ||
-      profile.edad == null ||
-      profile.sexo == null ||
-      profile.altura == null ||
-      profile.peso == null;
-
-    // Primer ingreso con datos faltantes: wizard paso a paso.
-    setAuthView(incompleto ? 'setup' : 'home');
-  }
-
-  function renderAuth() {
-    if (authView === 'home') {
-      return (
-        <HomeScreen
-          userName={userName}
-          avatarUrl={avatarUrl}
-          avatarSeed={avatarSeed}
-          onOpenProfile={() => setAuthView('profile')}
-        />
-      );
+    // Sesion activa: decidimos destino al entrar desde auth o desde la raiz.
+    if (inAuthGroup || atRoot) {
+      if (loading) return;
+      router.replace(isIncomplete ? '/setup' : '/home');
     }
-    if (authView === 'profile') {
-      return (
-        <ProfileScreen
-          userName={userName}
-          avatarUrl={avatarUrl}
-          avatarSeed={avatarSeed}
-          onClose={() => setAuthView('home')}
-          onEditProfile={() => setAuthView('onboarding')}
-          onAvatarChange={({ url, seed }) => {
-            if (url !== undefined) setAvatarUrl(url ?? undefined);
-            if (seed !== undefined) setAvatarSeed(seed ?? undefined);
-          }}
-        />
-      );
-    }
-    if (authView === 'setup') {
-      return (
-        <SetupWizardScreen userName={userName} onComplete={() => setAuthView('home')} />
-      );
-    }
-    if (authView === 'onboarding') {
-      // Edicion del perfil: vuelve a la vista de perfil al guardar o cancelar.
-      return (
-        <OnboardingScreen
-          userName={userName}
-          onComplete={() => setAuthView('profile')}
-          onCancel={() => setAuthView('profile')}
-        />
-      );
-    }
-    if (authView === 'register') {
-      return <RegisterScreen onNavigateToLogin={() => setAuthView('login')} />;
-    }
-    return (
-      <LoginScreen
-        onNavigateToRegister={() => setAuthView('register')}
-        onLoginSuccess={resolveAfterLogin}
-      />
-    );
-  }
-
-  return (
-    <FrenciaThemeProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AnimatedSplashOverlay />
-        {PREVIEW_AUTH ? renderAuth() : <AppTabs />}
-      </ThemeProvider>
-    </FrenciaThemeProvider>
-  );
+  }, [session, initializing, loading, isIncomplete, segments, pathname, router]);
 }

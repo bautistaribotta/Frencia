@@ -6,9 +6,11 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
 import { pickAndUploadAvatar } from '@/lib/avatar';
+import { useProfile } from '@/contexts/profile';
 
 import {
   Avatar,
@@ -26,26 +28,12 @@ import {
   type Palette,
 } from '@/design';
 
-interface ProfileScreenProps {
-  userName?: string;
-  avatarUrl?: string;
-  onClose?: () => void;
-  onEditProfile?: () => void;
-  avatarSeed?: string;
-  // Avisa al contenedor que cambio el avatar, para reusarlo en toda la app.
-  onAvatarChange?: (next: { url?: string | null; seed?: string | null }) => void;
-}
-
-export default function ProfileScreen({
-  userName = 'Marco',
-  avatarUrl,
-  avatarSeed,
-  onClose,
-  onEditProfile,
-  onAvatarChange,
-}: ProfileScreenProps) {
+export default function ProfileScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const router = useRouter();
+  // Datos del perfil compartidos (saludo, avatar) + reflejo de cambios.
+  const { displayName, profile, applyAvatar } = useProfile();
   // Tema activo (oscuro/claro): lo maneja el contexto, persiste solo.
   const { mode, setMode } = useTheme();
   const isDark = mode === 'dark';
@@ -53,11 +41,16 @@ export default function ProfileScreen({
   const [useRpe, setUseRpe] = useState(false);
   const [useLb, setUseLb] = useState(false);
   // Avatar: foto subida (prioridad) o semilla del avatar generado.
-  const [photo, setPhoto] = useState<string | undefined>(avatarUrl);
-  const [seed, setSeed] = useState<string | undefined>(avatarSeed);
+  const [photo, setPhoto] = useState<string | undefined>(profile?.avatarUrl ?? undefined);
+  const [seed, setSeed] = useState<string | undefined>(profile?.avatarSeed ?? undefined);
   const [busy, setBusy] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [showOptions, setShowOptions] = useState(false);
+
+  function closeProfile() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/home');
+  }
 
   // Carga preferencias y avatar guardados del usuario al abrir el perfil.
   useEffect(() => {
@@ -104,7 +97,7 @@ export default function ProfileScreen({
       return;
     }
     setPhoto(url);
-    onAvatarChange?.({ url });
+    applyAvatar({ url });
   }
 
   // Genera un avatar nuevo: nueva semilla que sobreescribe la actual y
@@ -132,7 +125,7 @@ export default function ProfileScreen({
     }
     setPhoto(undefined);
     setSeed(nuevaSeed);
-    onAvatarChange?.({ url: null, seed: nuevaSeed });
+    applyAvatar({ url: null, seed: nuevaSeed });
   }
 
   // Elimina la foto subida y vuelve al avatar generado por semilla.
@@ -162,7 +155,7 @@ export default function ProfileScreen({
     }
     setPhoto(undefined);
     setSeed(semilla);
-    onAvatarChange?.({ url: null, seed: semilla });
+    applyAvatar({ url: null, seed: semilla });
   }
 
   // Guarda una preferencia en profiles sin bloquear la UI (optimista).
@@ -194,7 +187,7 @@ export default function ProfileScreen({
         <View style={styles.header}>
           <Pressable
             hitSlop={10}
-            onPress={onClose}
+            onPress={closeProfile}
             accessibilityRole="button"
             accessibilityLabel="Cerrar perfil"
             style={styles.closeBtn}
@@ -215,13 +208,13 @@ export default function ProfileScreen({
             accessibilityLabel="Cambiar foto de perfil"
             style={styles.avatarWrap}
           >
-            <Avatar name={seed ?? userName} src={photo} size="lg" ring />
+            <Avatar name={seed ?? displayName} src={photo} size="lg" ring />
             <View style={styles.avatarBadge}>
               <Icon name="camera" size={13} color={colors.textOnAccent} />
             </View>
           </Pressable>
           <View style={styles.userText}>
-            <FrenciaText role="subtitle">{userName}</FrenciaText>
+            <FrenciaText role="subtitle">{displayName}</FrenciaText>
             <FrenciaText role="dataLabel" color={colors.textTertiary}>
               {busy ? 'Actualizando avatar...' : 'Tocá la foto para cambiarla'}
             </FrenciaText>
@@ -239,7 +232,7 @@ export default function ProfileScreen({
           size="lg"
           icon="user"
           fullWidth
-          onPress={onEditProfile}
+          onPress={() => router.push('/edit-profile')}
         >
           Editar perfil
         </Button>
@@ -321,7 +314,7 @@ export default function ProfileScreen({
           <Pressable style={styles.sheet}>
             {/* Vista previa grande del avatar actual, refleja los cambios en vivo */}
             <View style={styles.preview}>
-              <Avatar name={seed ?? userName} src={photo} size="xl" ring />
+              <Avatar name={seed ?? displayName} src={photo} size="xl" ring />
             </View>
             <FrenciaText role="subtitle" style={styles.sheetTitle}>
               Foto de perfil

@@ -13,6 +13,7 @@ import {
   type TextInputProps,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
 import { signInWithProvider, type OAuthProvider } from '@/lib/oauth';
@@ -36,14 +37,10 @@ import {
   type Palette,
 } from '@/design';
 
-interface LoginScreenProps {
-  onNavigateToRegister?: () => void;
-  onLoginSuccess?: (name?: string) => void;
-}
-
-export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }: LoginScreenProps) {
+export default function LoginScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -54,6 +51,8 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }: Lo
 
   const canSubmit = email.trim().length > 3 && password.length >= 6;
 
+  // Tras un login exitoso no navegamos a mano: el gate del layout raiz
+  // detecta la nueva sesion y decide entre setup (perfil incompleto) y home.
   async function handleLogin() {
     if (!canSubmit || loading) return;
     setLoading(true);
@@ -74,7 +73,6 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }: Lo
 
     const name = data.user?.user_metadata?.name as string | undefined;
     setDoneMsg(`Ingresaste. Bienvenido de nuevo${name ? `, ${name}` : ''}.`);
-    onLoginSuccess?.(name);
   }
 
   async function handleOAuth(provider: OAuthProvider) {
@@ -91,10 +89,6 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }: Lo
       setErrorMsg('No pudimos ingresar con ese proveedor. Proba de nuevo.');
       return;
     }
-
-    const { data } = await supabase.auth.getUser();
-    const name = data.user?.user_metadata?.name as string | undefined;
-    onLoginSuccess?.(name);
   }
 
   return (
@@ -244,7 +238,7 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }: Lo
             <FrenciaText role="bodySm" color={colors.textSecondary}>
               ¿No tenés cuenta?{' '}
             </FrenciaText>
-            <Pressable hitSlop={8} onPress={onNavigateToRegister}>
+            <Pressable hitSlop={8} onPress={() => router.push('/register')}>
               <FrenciaText role="bodySm" color={colors.accentText} style={styles.footerLink}>
                 Creá una
               </FrenciaText>

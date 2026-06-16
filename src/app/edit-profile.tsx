@@ -1,5 +1,7 @@
-/* Frencia · Onboarding — completar el perfil tras el primer login.
-   Espeja el login/registro. "Cada serie cuenta." */
+/* Frencia · Editar perfil.
+   Precarga los datos guardados y permite actualizarlos. Ningun campo es
+   obligatorio: el boton Guardar queda siempre disponible y los vacios se
+   persisten como null. Se abre como modal desde el perfil. */
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -14,8 +16,10 @@ import {
   type TextInputProps,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
+import { useProfile } from '@/contexts/profile';
 
 import {
   Button,
@@ -33,13 +37,6 @@ import {
   type Palette,
 } from '@/design';
 
-interface OnboardingScreenProps {
-  userName?: string;
-  onComplete?: () => void;
-  // Si se provee, muestra un boton para cancelar la edicion y volver atras.
-  onCancel?: () => void;
-}
-
 // Opciones de sexo: el value coincide con los permitidos en la tabla profiles.
 const SEXO_OPTIONS = [
   { value: 'masculino', label: 'Masculino' },
@@ -47,9 +44,11 @@ const SEXO_OPTIONS = [
   { value: 'otro', label: 'Otro' },
 ];
 
-export default function OnboardingScreen({ userName, onComplete, onCancel }: OnboardingScreenProps) {
+export default function EditProfileScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const router = useRouter();
+  const { refresh } = useProfile();
   const [edad, setEdad] = useState('');
   const [sexo, setSexo] = useState('');
   const [altura, setAltura] = useState('');
@@ -59,8 +58,10 @@ export default function OnboardingScreen({ userName, onComplete, onCancel }: Onb
   // Mientras traemos el perfil mostramos un spinner para tapar la demora inicial.
   const [cargandoPerfil, setCargandoPerfil] = useState(true);
 
-  // Modo edicion: hay un boton para cancelar y volver atras.
-  const isEditing = !!onCancel;
+  function goBack() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/profile');
+  }
 
   // Traemos los datos ya guardados para precompletar los inputs al editar.
   useEffect(() => {
@@ -143,22 +144,22 @@ export default function OnboardingScreen({ userName, onComplete, onCancel }: Onb
       return;
     }
 
-    onComplete?.();
+    // Releemos el perfil compartido y volvemos al perfil.
+    await refresh();
+    goBack();
   }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {onCancel ? (
-        <Pressable
-          hitSlop={10}
-          onPress={onCancel}
-          accessibilityRole="button"
-          accessibilityLabel="Cancelar edicion"
-          style={styles.backBtn}
-        >
-          <Icon name="chevron-left" size={24} color={colors.textPrimary} />
-        </Pressable>
-      ) : null}
+      <Pressable
+        hitSlop={10}
+        onPress={goBack}
+        accessibilityRole="button"
+        accessibilityLabel="Cancelar edicion"
+        style={styles.backBtn}
+      >
+        <Icon name="chevron-left" size={24} color={colors.textPrimary} />
+      </Pressable>
       {cargandoPerfil ? (
         <View style={styles.spinnerWrap}>
           <ActivityIndicator size="large" color={colors.accent} />
@@ -197,14 +198,10 @@ export default function OnboardingScreen({ userName, onComplete, onCancel }: Onb
           {/* Form */}
           <View style={styles.form}>
             <FrenciaText role="title" style={styles.heading}>
-              {isEditing ? 'Editar perfil' : 'Completá tu perfil'}
+              Editar perfil
             </FrenciaText>
             <FrenciaText role="bodySm" color={colors.textSecondary}>
-              {isEditing
-                ? 'Cambiá los datos de los campos para actualizarlos.'
-                : userName
-                  ? `Unos datos más, ${userName}, y arrancamos a entrenar.`
-                  : 'Unos datos más y arrancamos a entrenar.'}
+              Cambiá los datos de los campos para actualizarlos.
             </FrenciaText>
 
             <View style={styles.fields}>

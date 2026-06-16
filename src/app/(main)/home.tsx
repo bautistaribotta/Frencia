@@ -5,6 +5,9 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+
+import { useProfile } from '@/contexts/profile';
 
 import {
   Avatar,
@@ -22,14 +25,6 @@ import {
   spacing,
   type Palette,
 } from '@/design';
-
-interface HomeScreenProps {
-  userName?: string;
-  avatarUrl?: string;
-  avatarSeed?: string;
-  onCreateRoutine?: () => void;
-  onOpenProfile?: () => void;
-}
 
 interface Step {
   n: number;
@@ -51,10 +46,16 @@ const TABS = [
   { value: 'perfil', label: 'Perfil', icon: 'user' },
 ];
 
-export default function HomeScreen({ userName = 'Marco', avatarUrl, avatarSeed, onCreateRoutine, onOpenProfile }: HomeScreenProps) {
+export default function HomeScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const first = userName.split(' ')[0];
+  const router = useRouter();
+  const { displayName, profile } = useProfile();
+  const first = displayName.split(' ')[0];
+
+  const openProfile = () => router.push('/profile');
+  // Sin ruta de creacion de rutina todavia.
+  const onCreateRoutine = undefined;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -66,11 +67,16 @@ export default function HomeScreen({ userName = 'Marco', avatarUrl, avatarSeed, 
         <View style={styles.greeting}>
           <Pressable
             style={styles.greetingLeft}
-            onPress={onOpenProfile}
+            onPress={openProfile}
             accessibilityRole="button"
             accessibilityLabel="Abrir perfil"
           >
-            <Avatar name={avatarSeed ?? userName} src={avatarUrl} size="md" ring />
+            <Avatar
+              name={profile?.avatarSeed ?? displayName}
+              src={profile?.avatarUrl ?? undefined}
+              size="md"
+              ring
+            />
             <View>
               <FrenciaText role="subtitle">Hola, {first}</FrenciaText>
               <FrenciaText role="dataLabel" color={colors.textTertiary}>
@@ -179,7 +185,7 @@ export default function HomeScreen({ userName = 'Marco', avatarUrl, avatarSeed, 
         items={TABS}
         value="hoy"
         onChange={(value) => {
-          if (value === 'perfil') onOpenProfile?.();
+          if (value === 'perfil') openProfile();
         }}
         fab={{ icon: 'plus', label: 'Crear', onPress: onCreateRoutine }}
       />

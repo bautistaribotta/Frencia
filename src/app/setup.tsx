@@ -12,8 +12,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
+import { useProfile } from '@/contexts/profile';
 
 import {
   Button,
@@ -29,11 +31,6 @@ import {
   spacing,
   type Palette,
 } from '@/design';
-
-interface SetupWizardScreenProps {
-  userName?: string;
-  onComplete?: () => void;
-}
 
 const SEXO_OPTIONS = [
   { value: 'masculino', label: 'Masculino' },
@@ -61,9 +58,11 @@ const STEPS: StepDef[] = [
   { key: 'peso', type: 'number', icon: 'target', title: '¿Cuánto pesás?', hint: 'En kilogramos. Lo vas a poder actualizar.', placeholder: 'Peso (kg)', maxLength: 6 },
 ];
 
-export default function SetupWizardScreen({ userName, onComplete }: SetupWizardScreenProps) {
+export default function SetupWizardScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const router = useRouter();
+  const { displayName, refresh } = useProfile();
   const [index, setIndex] = useState(0);
   const [values, setValues] = useState<Record<StepKey, string>>({
     edad: '',
@@ -77,6 +76,13 @@ export default function SetupWizardScreen({ userName, onComplete }: SetupWizardS
   const step = STEPS[index];
   const isLast = index === STEPS.length - 1;
   const current = values[step.key];
+
+  // Tras guardar (o saltar) volvemos a la app. Releemos el perfil para que
+  // el saludo y los datos queden frescos.
+  async function goHome() {
+    await refresh();
+    router.replace('/home');
+  }
 
   // Valida el dato del paso actual segun las restricciones de profiles.
   function isValid(key: StepKey, raw: string): boolean {
@@ -112,7 +118,7 @@ export default function SetupWizardScreen({ userName, onComplete }: SetupWizardS
     // Si no completo nada, no tocamos la base: simplemente seguimos.
     if (Object.keys(payload).length === 0) {
       setSaving(false);
-      onComplete?.();
+      goHome();
       return;
     }
 
@@ -135,7 +141,7 @@ export default function SetupWizardScreen({ userName, onComplete }: SetupWizardS
       return;
     }
 
-    onComplete?.();
+    goHome();
   }
 
   function goNext() {
@@ -199,7 +205,7 @@ export default function SetupWizardScreen({ userName, onComplete }: SetupWizardS
 
           <View style={styles.titleBlock}>
             <FrenciaText role="dataLabel" color={colors.textTertiary}>
-              {userName ? `${userName}, paso ${index + 1} de ${STEPS.length}` : `Paso ${index + 1} de ${STEPS.length}`}
+              {displayName ? `${displayName}, paso ${index + 1} de ${STEPS.length}` : `Paso ${index + 1} de ${STEPS.length}`}
             </FrenciaText>
             <FrenciaText role="display" style={styles.title}>
               {step.title}

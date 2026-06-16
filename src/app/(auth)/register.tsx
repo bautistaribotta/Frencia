@@ -13,6 +13,7 @@ import {
   type TextInputProps,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
 
@@ -35,13 +36,10 @@ import {
   type Palette,
 } from '@/design';
 
-interface RegisterScreenProps {
-  onNavigateToLogin?: () => void;
-}
-
-export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProps) {
+export default function RegisterScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,6 +51,12 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
   const passwordsMatch = password.length >= 6 && password === confirm;
   const canSubmit =
     name.trim().length > 1 && email.trim().length > 3 && passwordsMatch;
+
+  function goToLogin() {
+    // Vuelve al login dentro del stack de auth.
+    if (router.canGoBack()) router.back();
+    else router.replace('/login');
+  }
 
   async function handleRegister() {
     if (!canSubmit || loading) return;
@@ -78,7 +82,7 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
     // Cuenta creada: por ahora cerramos la sesion (si la hubiera) y
     // volvemos al login. Mas adelante usaremos confirmacion por email.
     await supabase.auth.signOut();
-    onNavigateToLogin?.();
+    goToLogin();
   }
 
   return (
@@ -233,7 +237,7 @@ export default function RegisterScreen({ onNavigateToLogin }: RegisterScreenProp
             <FrenciaText role="bodySm" color={colors.textSecondary}>
               ¿Ya tenés cuenta?{' '}
             </FrenciaText>
-            <Pressable hitSlop={8} onPress={onNavigateToLogin}>
+            <Pressable hitSlop={8} onPress={goToLogin}>
               <FrenciaText role="bodySm" color={colors.accentText} style={styles.footerLink}>
                 Iniciá sesión
               </FrenciaText>

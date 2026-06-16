@@ -1,9 +1,11 @@
 /* Frencia · Avatar — RN port of components/core/Avatar.jsx
-   Image or initials fallback. */
+   Imagen, o avatar generativo (boring-avatars, variante beam) con la
+   paleta de la app cuando no hay foto. */
 
 import React from 'react';
-import { Image, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { colors, palette, sans } from '../theme';
+import { Image, StyleSheet, View, type ViewStyle } from 'react-native';
+import BoringAvatar from 'react-native-boring-avatars';
+import { colors, palette } from '../theme';
 
 type Size = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -16,17 +18,15 @@ export interface AvatarProps {
 }
 
 const DIM: Record<Size, number> = { xs: 28, sm: 36, md: 44, lg: 64 };
-const FONT: Record<Size, number> = { xs: 11, sm: 13, md: 16, lg: 22 };
 
-function initials(name = '') {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0] || '')
-    .join('')
-    .toUpperCase();
-}
+// Solo colores de la app: naranja (acento) + grises calidos (ink).
+const AVATAR_COLORS = [
+  palette.orange500,
+  palette.orange400,
+  palette.orange300,
+  palette.ink700,
+  palette.ink400,
+];
 
 export function Avatar({ src, name = '', size = 'md', ring = false, style }: AvatarProps) {
   const dim = DIM[size];
@@ -42,7 +42,7 @@ export function Avatar({ src, name = '', size = 'md', ring = false, style }: Ava
       {src ? (
         <Image source={{ uri: src }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
       ) : (
-        <Text style={[styles.initials, { fontSize: FONT[size] }]}>{initials(name)}</Text>
+        <BoringAvatar size={dim} name={name} variant="beam" colors={AVATAR_COLORS} />
       )}
     </View>
   );
@@ -53,9 +53,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    backgroundColor: palette.greenDeep,
+    backgroundColor: colors.surfaceChip,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
   },
-  initials: { color: palette.green300, fontFamily: sans.bold },
 });

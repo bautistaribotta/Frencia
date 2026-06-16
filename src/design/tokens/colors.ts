@@ -36,6 +36,7 @@ export const palette = {
   ink100: '#E8E4E9',
   ink50: '#F4F2F5',
   ink0: '#F9F9F9',
+  white: '#FFFFFF',
 
   // Status
   danger: '#EF4444',
@@ -43,7 +44,12 @@ export const palette = {
   info: '#60A5FA',
 } as const;
 
-export const colors = {
+/* ------------------------------------------------------------------
+   Tema oscuro (base). Mismas claves semanticas que el tema claro:
+   `colors` referencia esta paleta por defecto y para compatibilidad.
+   NOTA: RN no parsea oklch, por eso los tokens usan hex/rgba.
+   ------------------------------------------------------------------ */
+const darkColors = {
   // Surfaces
   bgApp: palette.ink900,
   bgAppDeep: palette.ink950,
@@ -96,6 +102,84 @@ export const colors = {
   dataVolume: palette.green500,
   dataIntensity: palette.orange500,
   dataTrack: palette.ink700,
-} as const;
 
-export type ColorToken = keyof typeof colors;
+  // Control internals (switch thumb)
+  switchThumb: palette.ink100,
+  switchThumbActive: palette.ink1000,
+};
+
+/* ------------------------------------------------------------------
+   Tema claro. Derivado de la misma paleta base: superficies claras,
+   texto oscuro, mismo acento naranja de marca. El acento de texto se
+   oscurece (orange600) para mantener contraste sobre fondos claros.
+   ------------------------------------------------------------------ */
+const lightColors: Palette = {
+  // Surfaces
+  bgApp: palette.ink50,
+  bgAppDeep: palette.ink100,
+  surfaceRaised: palette.white,
+  surfaceCard: palette.white,
+  surfaceCardElevated: palette.white,
+  surfaceChip: palette.ink100,
+  surfaceInset: palette.ink100,
+
+  // Tinted surfaces (brand wash)
+  surfaceGreenSoft: 'rgba(255, 109, 41, 0.10)',
+  surfaceGreenLine: 'rgba(255, 109, 41, 0.30)',
+  surfaceOrangeSoft: 'rgba(255, 109, 41, 0.10)',
+  surfaceOrangeLine: 'rgba(255, 109, 41, 0.32)',
+
+  // Text
+  textPrimary: palette.ink900,
+  textSecondary: palette.ink500,
+  textTertiary: palette.ink400,
+  textDisabled: palette.ink300,
+  textOnAccent: palette.ink1000, // sigue siendo negro sobre naranja
+  textInverse: palette.ink0,
+
+  // Borders / dividers
+  borderSubtle: palette.ink100,
+  borderDefault: palette.ink200,
+  borderStrong: palette.ink300,
+  divider: 'rgba(0, 0, 0, 0.07)',
+
+  // Accent — primary action
+  accent: palette.orange500,
+  accentHover: palette.orange400,
+  accentPress: palette.orange600,
+  accentText: palette.orange600,
+
+  // Accent — intensity
+  intensity: palette.orange500,
+  intensityHover: palette.orange400,
+  intensityPress: palette.orange600,
+  intensityText: palette.orange600,
+
+  // Status
+  success: palette.green600,
+  warning: palette.orange600,
+  danger: palette.danger,
+  dangerText: palette.danger,
+  info: palette.info,
+
+  // Data viz
+  dataVolume: palette.green600,
+  dataIntensity: palette.orange500,
+  dataTrack: palette.ink200,
+
+  // Control internals (switch thumb)
+  switchThumb: palette.white,
+  switchThumbActive: palette.white,
+};
+
+export const themes = { dark: darkColors, light: lightColors } as const;
+
+export type ThemeMode = keyof typeof themes;
+/** Cada token mapeado a string: ambas paletas comparten la misma forma. */
+export type Palette = { [K in keyof typeof darkColors]: string };
+
+/** Paleta por defecto (tema oscuro). Para uso fuera de React o como base.
+ *  Dentro de componentes usar `useColors()` para que reaccione al tema. */
+export const colors = darkColors;
+
+export type ColorToken = keyof typeof darkColors;

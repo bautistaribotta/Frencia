@@ -3,8 +3,8 @@
    import { colors, spacing, radius, shadow, textRole } from '@/design/theme'
    ============================================================ */
 
-export { palette, colors } from './tokens/colors';
-export type { ColorToken } from './tokens/colors';
+export { palette, colors, themes } from './tokens/colors';
+export type { ColorToken, Palette, ThemeMode } from './tokens/colors';
 export { space, spacing, sizing } from './tokens/spacing';
 export { radius, shadow, motion } from './tokens/radius';
 export {

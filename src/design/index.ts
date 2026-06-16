@@ -7,6 +7,14 @@
 // Tokens & theme
 export * from './theme';
 
+// Theme runtime (provider + hooks)
+export {
+  FrenciaThemeProvider,
+  useTheme,
+  useColors,
+  useThemedStyles,
+} from './theme-context';
+
 // Fonts & icons
 export { useFrenciaFonts } from './fonts';
 export { Icon } from './Icon';

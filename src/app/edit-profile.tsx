@@ -30,7 +30,6 @@ import {
   useThemedStyles,
   radius,
   sans,
-  shadow,
   sizing,
   space,
   spacing,
@@ -335,7 +334,6 @@ const makeStyles = (colors: Palette) =>
     backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadow.glowGreenSoft,
   },
   brandText: { height: 72, justifyContent: 'center' },
   wordmark: {

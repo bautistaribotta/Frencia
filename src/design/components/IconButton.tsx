@@ -23,7 +23,7 @@ const BOX: Record<Size, number> = { sm: 36, md: 44, lg: 52 };
 const GLYPH: Record<Size, number> = { sm: 18, md: 22, lg: 26 };
 
 const makeFill = (colors: Palette): Record<Variant, ViewStyle> => ({
-  primary: { backgroundColor: colors.accent, ...shadow.glowGreenSoft },
+  primary: { backgroundColor: colors.accent },
   surface: { backgroundColor: colors.surfaceChip, borderColor: colors.borderSubtle, borderWidth: 1 },
   ghost: { backgroundColor: 'transparent' },
 });

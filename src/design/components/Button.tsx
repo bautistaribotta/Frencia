@@ -41,7 +41,7 @@ const PAD_X: Record<Size, number> = { sm: 16, md: 22, lg: 28 };
 const FONT: Record<Size, number> = { sm: 14, md: 16, lg: 17 };
 
 const makeFill = (colors: Palette): Record<Variant, ViewStyle> => ({
-  primary: { backgroundColor: colors.accent, ...shadow.glowGreenSoft },
+  primary: { backgroundColor: colors.accent },
   intensity: { backgroundColor: colors.intensity },
   secondary: { backgroundColor: colors.surfaceCard, borderColor: colors.borderDefault, borderWidth: 1 },
   ghost: { backgroundColor: 'transparent' },

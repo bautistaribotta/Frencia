@@ -35,9 +35,10 @@ import {
 
 interface LoginScreenProps {
   onNavigateToRegister?: () => void;
+  onLoginSuccess?: (name?: string) => void;
 }
 
-export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) {
+export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -65,9 +66,9 @@ export default function LoginScreen({ onNavigateToRegister }: LoginScreenProps) 
       return;
     }
 
-    setDoneMsg(`Ingresaste. Bienvenido de nuevo${
-      data.user?.user_metadata?.name ? `, ${data.user.user_metadata.name}` : ''
-    }.`);
+    const name = data.user?.user_metadata?.name as string | undefined;
+    setDoneMsg(`Ingresaste. Bienvenido de nuevo${name ? `, ${name}` : ''}.`);
+    onLoginSuccess?.(name);
   }
 
   return (

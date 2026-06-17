@@ -22,6 +22,7 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { pickAndUploadAvatar } from '@/lib/avatar';
 import { useProfile } from '@/contexts/profile';
+import { useToast } from '@/contexts/toast';
 
 import {
   Avatar,
@@ -45,6 +46,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   // Datos del perfil compartidos (saludo, avatar) + reflejo de cambios.
   const { displayName, profile, applyAvatar } = useProfile();
+  const { showToast } = useToast();
   // Tema activo (oscuro/claro): lo maneja el contexto, persiste solo.
   const { mode, setMode } = useTheme();
   const isDark = mode === 'dark';
@@ -140,6 +142,7 @@ export default function ProfileScreen() {
     }
     setPhoto(url);
     applyAvatar({ url });
+    showToast({ message: 'Foto de perfil actualizada', type: 'success' });
   }
 
   // Genera un avatar nuevo: nueva semilla que sobreescribe la actual y
@@ -222,6 +225,7 @@ export default function ProfileScreen() {
   // Cierra la sesion. El cambio lo detecta SessionProvider y el gate del
   // layout raiz redirige al login automaticamente.
   async function handleSignOut() {
+    showToast({ message: 'Sesion cerrada', type: 'info' });
     await supabase.auth.signOut();
   }
 
@@ -395,7 +399,7 @@ export default function ProfileScreen() {
               Foto de perfil
             </FrenciaText>
             <Button variant="primary" size="lg" icon="repeat" fullWidth onPress={generateAvatar}>
-              Generar avatar nuevo
+              Generar nuevo avatar
             </Button>
             <Button variant="secondary" size="lg" icon="camera" fullWidth onPress={requestUploadPhoto}>
               Subir una foto

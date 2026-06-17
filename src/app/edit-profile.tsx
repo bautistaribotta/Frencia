@@ -318,7 +318,7 @@ const makeStyles = (colors: Palette) =>
     gap: space[1],
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.padScreen,
-    paddingTop: space[2],
+    paddingTop: space[8],
     paddingBottom: space[2],
   },
   backLabel: { fontFamily: sans.semibold },

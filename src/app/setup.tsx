@@ -109,18 +109,15 @@ export default function SetupWizardScreen() {
     setSaving(true);
     setErrorMsg('');
 
-    const payload: Record<string, number | string> = {};
+    // Marcamos el setup como completado aunque no haya cargado ningun dato:
+    // asi el wizard no vuelve a aparecer en los proximos ingresos.
+    const payload: Record<string, number | string | boolean> = {
+      onboarding_completed: true,
+    };
     if (isValid('edad', values.edad)) payload.edad = Number(values.edad);
     if (isValid('sexo', values.sexo)) payload.sexo = values.sexo;
     if (isValid('altura', values.altura)) payload.altura = Number(values.altura);
     if (isValid('peso', values.peso)) payload.peso = Number(values.peso);
-
-    // Si no completo nada, no tocamos la base: simplemente seguimos.
-    if (Object.keys(payload).length === 0) {
-      setSaving(false);
-      goHome();
-      return;
-    }
 
     const {
       data: { user },

@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
 import { useProfile } from '@/contexts/profile';
+import { useToast } from '@/contexts/toast';
 
 import {
   Button,
@@ -48,6 +49,7 @@ export default function EditProfileScreen() {
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { refresh } = useProfile();
+  const { showToast } = useToast();
   const [edad, setEdad] = useState('');
   const [sexo, setSexo] = useState('');
   const [altura, setAltura] = useState('');
@@ -143,8 +145,9 @@ export default function EditProfileScreen() {
       return;
     }
 
-    // Releemos el perfil compartido y volvemos al perfil.
+    // Releemos el perfil compartido, avisamos con un toast y volvemos al perfil.
     await refresh();
+    showToast({ message: 'Perfil actualizado', type: 'success' });
     goBack();
   }
 

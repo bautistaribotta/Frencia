@@ -13,6 +13,7 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { FrenciaThemeProvider, useColors, useFrenciaFonts, useTheme } from '@/design';
 import { SessionProvider, useSession } from '@/contexts/session';
 import { ProfileProvider, useProfile } from '@/contexts/profile';
+import { ToastProvider } from '@/contexts/toast';
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFrenciaFonts();
@@ -26,8 +27,10 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <SessionProvider>
             <ProfileProvider>
-              <AnimatedSplashOverlay />
-              <RootNavigator />
+              <ToastProvider>
+                <AnimatedSplashOverlay />
+                <RootNavigator />
+              </ToastProvider>
             </ProfileProvider>
           </SessionProvider>
         </SafeAreaProvider>
@@ -58,14 +61,10 @@ function RootNavigator() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(main)" />
         <Stack.Screen name="setup" />
-        <Stack.Screen
-          name="profile"
-          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-        />
-        <Stack.Screen
-          name="edit-profile"
-          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-        />
+        {/* Card con entrada desde abajo (no modal nativo) para que el toast
+            del root quede por encima y siga sin bloquear la interaccion. */}
+        <Stack.Screen name="profile" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="edit-profile" options={{ animation: 'slide_from_bottom' }} />
       </Stack>
     </>
   );
@@ -78,7 +77,7 @@ function RootNavigator() {
      mas: el usuario puede saltar el setup y navegar libre. */
 function useAuthRedirect() {
   const { session, initializing } = useSession();
-  const { isIncomplete, loading } = useProfile();
+  const { needsOnboarding, loading } = useProfile();
   const segments = useSegments();
   const pathname = usePathname();
   const router = useRouter();
@@ -97,7 +96,7 @@ function useAuthRedirect() {
     // Sesion activa: decidimos destino al entrar desde auth o desde la raiz.
     if (inAuthGroup || atRoot) {
       if (loading) return;
-      router.replace(isIncomplete ? '/setup' : '/home');
+      router.replace(needsOnboarding ? '/setup' : '/home');
     }
-  }, [session, initializing, loading, isIncomplete, segments, pathname, router]);
+  }, [session, initializing, loading, needsOnboarding, segments, pathname, router]);
 }

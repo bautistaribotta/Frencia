@@ -25,6 +25,7 @@ export interface ProfileData {
   peso: number | null;
   avatarUrl: string | null;
   avatarSeed: string | null;
+  onboardingCompleted: boolean;
 }
 
 interface ProfileContextValue {
@@ -32,8 +33,8 @@ interface ProfileContextValue {
   loading: boolean;
   // Nombre listo para mostrar, con fallback si el perfil aun no cargo.
   displayName: string;
-  // Falta algun dato base del perfil (primer ingreso).
-  isIncomplete: boolean;
+  // El usuario todavia no paso por el setup inicial (primer ingreso).
+  needsOnboarding: boolean;
   refresh: () => Promise<void>;
   applyAvatar: (next: { url?: string | null; seed?: string | null }) => void;
 }
@@ -42,20 +43,10 @@ const ProfileContext = createContext<ProfileContextValue>({
   profile: null,
   loading: true,
   displayName: 'Atleta',
-  isIncomplete: true,
+  needsOnboarding: false,
   refresh: async () => {},
   applyAvatar: () => {},
 });
-
-function computeIncomplete(profile: ProfileData | null): boolean {
-  return (
-    !profile ||
-    profile.edad == null ||
-    profile.sexo == null ||
-    profile.altura == null ||
-    profile.peso == null
-  );
-}
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const { user } = useSession();
@@ -75,7 +66,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     const { data } = await supabase
       .from('profiles')
-      .select('name, username, edad, sexo, altura, peso, avatar_url, avatar_seed')
+      .select('name, username, edad, sexo, altura, peso, avatar_url, avatar_seed, onboarding_completed')
       .eq('id', current.id)
       .maybeSingle();
 
@@ -90,6 +81,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
             peso: data.peso,
             avatarUrl: data.avatar_url,
             avatarSeed: data.avatar_seed,
+            onboardingCompleted: data.onboarding_completed ?? false,
           }
         : null,
     );
@@ -130,7 +122,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         profile,
         loading,
         displayName,
-        isIncomplete: computeIncomplete(profile),
+        needsOnboarding: profile ? !profile.onboardingCompleted : false,
         refresh,
         applyAvatar,
       }}

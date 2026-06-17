@@ -9,6 +9,7 @@
 import React from 'react';
 import {
   Activity,
+  AlertTriangle,
   Apple,
   ArrowDownRight,
   ArrowRight,
@@ -17,6 +18,7 @@ import {
   Calendar,
   CalendarOff,
   Check,
+  Info,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -51,6 +53,7 @@ import { useColors } from './theme-context';
 
 const REGISTRY: Record<string, LucideIcon> = {
   activity: Activity,
+  'alert-triangle': AlertTriangle,
   apple: Apple,
   'arrow-down-right': ArrowDownRight,
   'arrow-right': ArrowRight,
@@ -70,6 +73,7 @@ const REGISTRY: Record<string, LucideIcon> = {
   'eye-off': EyeOff,
   flame: Flame,
   home: Home,
+  info: Info,
   list: List,
   lock: Lock,
   mail: Mail,

@@ -138,8 +138,10 @@ const makeStyles = (colors: Palette) =>
     },
     backLabel: { fontFamily: sans.semibold },
     scroll: {
+      // Misma separacion (space[7]) que en profile entre el boton de volver
+      // y el header del usuario. backBtn aporta space[2] mas estos space[6].
       paddingHorizontal: spacing.padScreen,
-      paddingTop: space[4],
+      paddingTop: space[6],
       paddingBottom: space[12],
       gap: space[6],
     },

@@ -11,6 +11,35 @@ interface UploadResult {
   canceled?: boolean;
 }
 
+const BASE64_CHARS =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+// Decodifica base64 a bytes sin depender de atob/Buffer: confiable en iOS,
+// Android y web. Supabase Storage acepta el Uint8Array para la subida.
+function decodeBase64(input: string): Uint8Array {
+  const clean = input.replace(/[^A-Za-z0-9+/]/g, '');
+  const len = clean.length;
+  const padding = clean.endsWith('==') ? 2 : clean.endsWith('=') ? 1 : 0;
+  const byteLength = Math.floor((len * 3) / 4) - padding;
+  const bytes = new Uint8Array(byteLength);
+
+  let p = 0;
+  for (let i = 0; i < len; i += 4) {
+    const c0 = BASE64_CHARS.indexOf(clean[i]);
+    const c1 = BASE64_CHARS.indexOf(clean[i + 1]);
+    const c2 = BASE64_CHARS.indexOf(clean[i + 2]);
+    const c3 = BASE64_CHARS.indexOf(clean[i + 3]);
+
+    const n = (c0 << 18) | (c1 << 12) | ((c2 & 63) << 6) | (c3 & 63);
+
+    if (p < byteLength) bytes[p++] = (n >> 16) & 0xff;
+    if (p < byteLength) bytes[p++] = (n >> 8) & 0xff;
+    if (p < byteLength) bytes[p++] = n & 0xff;
+  }
+
+  return bytes;
+}
+
 export async function pickAndUploadAvatar(userId: string): Promise<UploadResult> {
   // En nativo pide permiso de galeria; en web se resuelve como concedido.
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -23,6 +52,9 @@ export async function pickAndUploadAvatar(userId: string): Promise<UploadResult>
     allowsEditing: true,
     aspect: [1, 1],
     quality: 0.7,
+    // Pedimos el base64 directo: en iOS leer el file:// con fetch().arrayBuffer()
+    // es poco fiable y puede colgar la subida indefinidamente.
+    base64: true,
   });
 
   if (result.canceled || !result.assets?.length) {
@@ -31,15 +63,18 @@ export async function pickAndUploadAvatar(userId: string): Promise<UploadResult>
 
   const asset = result.assets[0];
 
+  if (!asset.base64) {
+    return { error: 'No pudimos leer la imagen. Proba de nuevo.' };
+  }
+
   try {
-    const res = await fetch(asset.uri);
-    const arrayBuffer = await res.arrayBuffer();
+    const bytes = decodeBase64(asset.base64);
     const contentType = asset.mimeType ?? 'image/jpeg';
     const path = `${userId}/avatar.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
-      .upload(path, arrayBuffer, { contentType, upsert: true });
+      .upload(path, bytes, { contentType, upsert: true });
 
     if (uploadError) {
       return { error: 'No pudimos subir la imagen. Proba de nuevo.' };

@@ -53,6 +53,8 @@ export default function ProfileScreen() {
   // RIR/RPE y kg/lb se persisten en Supabase (profiles).
   const [useRpe, setUseRpe] = useState(false);
   const [useLb, setUseLb] = useState(false);
+  // Unidad de medida corporal (altura): por ahora solo front, no persiste.
+  const [useFeet, setUseFeet] = useState(false);
   // Avatar: foto subida (prioridad) o semilla del avatar generado.
   const [photo, setPhoto] = useState<string | undefined>(profile?.avatarUrl ?? undefined);
   const [seed, setSeed] = useState<string | undefined>(profile?.avatarSeed ?? undefined);
@@ -244,14 +246,18 @@ export default function ProfileScreen() {
             hitSlop={10}
             onPress={closeProfile}
             accessibilityRole="button"
-            accessibilityLabel="Cerrar perfil"
-            style={styles.closeBtn}
+            accessibilityLabel="Volver"
+            style={styles.backBtn}
           >
             <Icon name="chevron-left" size={24} color={colors.textPrimary} />
+            <FrenciaText role="bodySm" color={colors.textPrimary} style={styles.backLabel}>
+              Volver
+            </FrenciaText>
           </Pressable>
-          <FrenciaText role="title">Perfil</FrenciaText>
-          {/* Espaciador para centrar el titulo */}
-          <View style={styles.closeBtn} />
+          {/* Titulo centrado de forma absoluta para no descentrarse con el boton */}
+          <FrenciaText role="title" style={styles.headerTitle} pointerEvents="none">
+            Perfil
+          </FrenciaText>
         </View>
 
         {/* Tarjeta de usuario */}
@@ -327,6 +333,19 @@ export default function ProfileScreen() {
                 </FrenciaText>
               </View>
               <Switch checked={useLb} onChange={toggleLb} />
+            </View>
+
+            {/* Fila: unidad de medida corporal (solo front por ahora) */}
+            <View style={[styles.settingRow, styles.settingRowDivider]}>
+              <View style={styles.settingText}>
+                <FrenciaText role="bodySm" style={styles.settingTitle}>
+                  Unidad de medida corporal
+                </FrenciaText>
+                <FrenciaText role="bodySm" color={colors.textTertiary} style={styles.settingSub}>
+                  {useFeet ? 'En pies y pulgadas' : 'En centímetros (cm)'}
+                </FrenciaText>
+              </View>
+              <Switch checked={useFeet} onChange={setUseFeet} />
             </View>
 
             {/* Fila: tema */}
@@ -457,13 +476,20 @@ const makeStyles = (colors: Palette) =>
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    minHeight: 40,
   },
-  closeBtn: {
-    width: 40,
-    height: 40,
+  backBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: space[1],
+    zIndex: 1,
+  },
+  backLabel: { fontFamily: sans.semibold },
+  headerTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
   },
 
   // Tarjeta de usuario

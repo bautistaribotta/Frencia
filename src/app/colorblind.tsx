@@ -63,12 +63,12 @@ export default function ColorblindScreen() {
         hitSlop={10}
         onPress={goBack}
         accessibilityRole="button"
-        accessibilityLabel="Volver atras"
+        accessibilityLabel="Volver"
         style={styles.backBtn}
       >
         <Icon name="chevron-left" size={24} color={colors.textPrimary} />
         <FrenciaText role="bodySm" color={colors.textPrimary} style={styles.backLabel}>
-          Volver atras
+          Volver
         </FrenciaText>
       </Pressable>
 

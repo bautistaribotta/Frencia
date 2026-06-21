@@ -101,7 +101,7 @@ export function WheelPicker({
       style={{ height, width }}
       showsVerticalScrollIndicator={false}
       snapToInterval={itemHeight}
-      decelerationRate="fast"
+      decelerationRate="normal"
       scrollEventThrottle={16}
       onScroll={onScroll}
       onMomentumScrollEnd={settle}

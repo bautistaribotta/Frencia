@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
+import { edadAFechaNacimiento, fechaNacimientoAEdad } from '@/lib/edad';
 import { useProfile } from '@/contexts/profile';
 import { useToast } from '@/contexts/toast';
 import { MeasurePicker } from '@/components/MeasurePicker';
@@ -99,14 +100,15 @@ export default function EditProfileScreen() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('edad, sexo, altura, peso, unidad_altura, unidad_peso')
+        .select('fecha_nacimiento, sexo, altura, peso, unidad_altura, unidad_peso')
         .eq('id', user.id)
         .single();
 
       if (!activo) return;
 
       if (data) {
-        if (data.edad != null) setEdad(String(data.edad));
+        const edadCalc = fechaNacimientoAEdad(data.fecha_nacimiento);
+        if (edadCalc != null) setEdad(String(edadCalc));
         if (data.sexo != null) setSexo(data.sexo);
         if (data.altura != null) setAltura(String(data.altura));
         if (data.peso != null) setPeso(String(data.peso));
@@ -153,7 +155,7 @@ export default function EditProfileScreen() {
     const { error } = await supabase
       .from('profiles')
       .update({
-        edad: edad.trim() === '' ? null : edadNum,
+        fecha_nacimiento: edad.trim() === '' ? null : edadAFechaNacimiento(edadNum),
         sexo: SEXO_OPTIONS.some((o) => o.value === sexo) ? sexo : null,
         altura: altura.trim() === '' ? null : alturaNum,
         peso: peso.trim() === '' ? null : pesoNum,

@@ -14,6 +14,7 @@ import React, {
 } from 'react';
 
 import { supabase } from '@/lib/supabase';
+import { fechaNacimientoAEdad } from '@/lib/edad';
 import { useSession } from './session';
 
 export interface ProfileData {
@@ -73,7 +74,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     for (let intento = 0; intento < 3; intento++) {
       const res = await supabase
         .from('profiles')
-        .select('name, username, edad, sexo, altura, peso, avatar_url, avatar_seed, onboarding_completed, medidor_esfuerzo')
+        .select('name, username, fecha_nacimiento, sexo, altura, peso, avatar_url, avatar_seed, onboarding_completed, medidor_esfuerzo')
         .eq('id', current.id)
         .maybeSingle();
       if (res.data) {
@@ -88,7 +89,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         ? {
             name: data.name,
             username: data.username,
-            edad: data.edad,
+            edad: fechaNacimientoAEdad(data.fecha_nacimiento),
             sexo: data.sexo,
             altura: data.altura,
             peso: data.peso,

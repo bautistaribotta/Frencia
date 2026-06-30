@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
+import { edadAFechaNacimiento } from '@/lib/edad';
 import { useProfile } from '@/contexts/profile';
 import { MeasurePicker } from '@/components/MeasurePicker';
 
@@ -136,7 +137,10 @@ export default function SetupWizardScreen() {
       unidad_altura: unitHeight === 'imperial' ? 'ft' : 'cm',
       unidad_peso: unitWeight === 'imperial' ? 'lb' : 'kg',
     };
-    if (isValid('edad', vals.edad)) payload.edad = Number(vals.edad);
+    if (isValid('edad', vals.edad)) {
+      const fecha = edadAFechaNacimiento(Number(vals.edad));
+      if (fecha) payload.fecha_nacimiento = fecha;
+    }
     if (isValid('sexo', vals.sexo)) payload.sexo = vals.sexo;
     if (isValid('altura', vals.altura)) payload.altura = Number(vals.altura);
     if (isValid('peso', vals.peso)) payload.peso = Number(vals.peso);
